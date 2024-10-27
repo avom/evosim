@@ -1,4 +1,5 @@
 import { Organism } from "../organism";
+import { Plant } from "../plant";
 import { OrganismMap } from "./organism-map";
 
 export class LinearOrganismMap implements OrganismMap {
@@ -36,6 +37,23 @@ export class LinearOrganismMap implements OrganismMap {
       }
     }
     return result;
+  }
+
+  isAlivePlantAtCell(x: number, y: number): boolean {
+    const cellX = Math.floor(x);
+    const cellY = Math.floor(y);
+    for (const organism of this.organisms) {
+      if (!organism || !organism.isAlive || !(organism instanceof Plant)) {
+        continue;
+      }
+
+      const orgX = Math.floor(organism.x);
+      const orgY = Math.floor(organism.y);
+      if (cellX == orgX && cellY == orgY) {
+        return true;
+      }
+    }
+    return false;
   }
 
   optimize(): void {

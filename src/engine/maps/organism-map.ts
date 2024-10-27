@@ -11,5 +11,7 @@ export interface OrganismMap {
   
   getAllWithinRadius(x: number, y: number, r: number): Organism[];
 
+  isAlivePlantAtCell(x: number, y: number): boolean;
+
   optimize(): void;
 }

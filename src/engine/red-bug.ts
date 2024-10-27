@@ -2,7 +2,7 @@ import { Organism } from "./organism";
 import { Settings } from "./settings";
 import { World } from "./world";
 
-export class BlueBug implements Organism {
+export class RedBug implements Organism {
   private readonly world: World;
 
   x: number;
@@ -42,18 +42,18 @@ export class BlueBug implements Organism {
     this.energy -= cost.metabolism * this.radius ** 2;
     this.energy -= cost.heatLoss * this.radius;
 
-    this.energy += this.world.killRandomPlantInRadiusAndReturnEnergy(this.x, this.y, this.radius);
+    this.energy += this.world.killRandomBlueBugInRadiusAndReturnEnergy(this.x, this.y, this.radius);
 
-    const offspringEnergy = Settings.bugs.blue.initialEnergy;
+    const offspringEnergy = Settings.bugs.red.initialEnergy;
     if (this.energy >= 2 * offspringEnergy) {
-      this.world.add(new BlueBug(this.world, this.x, this.y, offspringEnergy));
+      this.world.add(new RedBug(this.world, this.x, this.y, offspringEnergy));
       this.energy -= offspringEnergy;
     }
   }
 
   draw(context: CanvasRenderingContext2D): void {
     context.fillStyle = "#fff";
-    context.strokeStyle = "#00f";
+    context.strokeStyle = "#f00";
     context.beginPath();
     context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
     context.fill();

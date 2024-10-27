@@ -1,4 +1,5 @@
 import { Organism } from "../organism";
+import { Plant } from "../plant";
 import { OrganismMap } from "./organism-map";
 
 export class MatrixOrganismMap implements OrganismMap {
@@ -17,6 +18,17 @@ export class MatrixOrganismMap implements OrganismMap {
         this.map[x][y] = [];
       }
     }
+  }
+
+  isAlivePlantAtCell(x: number, y: number): boolean {
+    const cellX = Math.floor(x);
+    const cellY = Math.floor(y);
+    for (const organism of this.map[cellX][cellY]) {
+      if (organism.isAlive && organism instanceof Plant) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getAllWithinRadius(x: number, y: number, r: number): Organism[] {

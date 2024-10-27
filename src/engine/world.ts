@@ -5,6 +5,7 @@ import { Plant } from "./plant";
 import { Settings } from "./settings";
 import { LinearOrganismMap } from "./maps/linear-organism-map";
 import { MatrixOrganismMap } from "./maps/matrix-organism-map";
+import { RedBug } from "./red-bug";
 
 export class World {
   readonly width: number;
@@ -25,23 +26,20 @@ export class World {
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, this.width, this.height);
 
-    for (let i = 0; i < this.organismCount; i++) {
-      const organism = this.organisms[i];
-      if (organism.isAlive && organism instanceof Plant) {
-        organism.draw(context);
-      }
-    }
+    const drawingOrder = [Plant, BlueBug, RedBug];
 
-    for (let i = 0; i < this.organismCount; i++) {
-      const organism = this.organisms[i];
-      if (organism.isAlive && organism instanceof BlueBug) {
-        organism.draw(context);
+    for (const organismType of drawingOrder) {
+      for (let i = 0; i < this.organismCount; i++) {
+        const organism = this.organisms[i];
+        if (organism.isAlive && organism instanceof organismType) {
+          organism.draw(context);
+        }
       }
     }
   }
 
   tick(dt: number): void {
-    const t0 = performance.now();
+    // const _t0 = performance.now();
     for (let i = 0; i < this.organismCount; i++) {
       const organism = this.organisms[i];
       const oldX = Math.floor(organism.x);
@@ -51,9 +49,9 @@ export class World {
 
       this.map.move(organism, oldX, oldY);
     }
-    const t1 = performance.now();
+    // const _t1 = performance.now();
     this.map.optimize();
-    const t2 = performance.now();
+    // const _t2 = performance.now();
 
     let count = 0;
     for (let i = 0; i < this.organismCount; i++) {
@@ -65,7 +63,7 @@ export class World {
       }
     }
     this.organismCount = count;
-    const t3 = performance.now();
+    // const _t3 = performance.now();
     // console.log((t1 - t0) + ' ' + (t2 - t1) + ' ' + (t3 - t2) + ' ' + this.organismCount);
   }
 
@@ -88,24 +86,56 @@ export class World {
       this.map.add(bug);
     }
 
+    const redbugCount = Settings.bugs.red.initialCount;
+    for (let i = 0; i < redbugCount; i++) {
+      const x = Math.floor(Math.random() * this.width);
+      const y = Math.floor(Math.random() * this.height);
+      const bug = new RedBug(this, x, y, Settings.bugs.red.initialEnergy);
+      this.organisms.push(bug);
+      this.map.add(bug);
+    }
+
     this.organismCount = this.organisms.length;
   }
 
   add(organism: Organism) {
+    if (organism instanceof Plant) {
+      if (this.map.isAlivePlantAtCell(organism.x, organism.y)) {
+        // Don't seed a new plant when there's one already growing at the location (cell)
+        // Effectively the new plant immediately dies
+        return;
+      }
+    }
+
     this.organisms[this.organismCount++] = organism;
     this.map.add(organism);
   }
 
-  killPlantsInAreaAndReturnEnergy(x: number, y: number, r: number): number {
-    let result = 0;
+  killRandomPlantInRadiusAndReturnEnergy(x: number, y: number, r: number): number {
     const organisms = this.map.getAllWithinRadius(x, y, r);
-    for (const organism of organisms) {
-      if (organism.isAlive && (organism instanceof Plant)) {
-        result += organism.energy;
-        organism.kill();
-      }
+    const plants = organisms.filter(o => o.isAlive && o instanceof Plant);
+    if (plants.length == 0) {
+      return 0;
     }
-    return result;
+
+    const idx = Math.floor(Math.random() * plants.length);
+    const plant = plants[idx];
+    const energy = plant.energy;
+    plant.kill();
+    return energy;
   }
 
+  killRandomBlueBugInRadiusAndReturnEnergy(x: number, y: number, r: number) {
+    const organisms = this.map.getAllWithinRadius(x, y, r);
+    const blues = organisms.filter(o => o.isAlive && o instanceof BlueBug);
+    if (blues.length == 0) {
+      return 0;
+    }
+
+    const idx = Math.floor(Math.random() * blues.length);
+    const bug = blues[idx];
+    const energy = bug.energy;
+    bug.kill();
+    return energy;
+  }
 }

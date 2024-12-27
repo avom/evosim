@@ -5,12 +5,17 @@ import { World } from "./world";
 export class RedBug implements Organism {
   private readonly world: World;
 
+  readonly id: number;
+  readonly generation: number;
+
   x: number;
   y: number;
   energy: number;
 
-  constructor(world: World, x: number, y: number, energy: number) {
+  constructor(world: World, generation: number, x: number, y: number, energy: number) {
     this.world = world;
+    this.id = world.nextOrganismId();
+    this.generation = generation;
     this.x = x;
     this.y = y;
     this.energy = energy;
@@ -46,7 +51,7 @@ export class RedBug implements Organism {
 
     const offspringEnergy = Settings.bugs.red.initialEnergy;
     if (this.energy >= 2 * offspringEnergy) {
-      this.world.add(new RedBug(this.world, this.x, this.y, offspringEnergy));
+      this.world.add(new RedBug(this.world, this.generation + 1, this.x, this.y, offspringEnergy));
       this.energy -= offspringEnergy;
     }
   }
@@ -65,7 +70,7 @@ export class RedBug implements Organism {
   }
 
   get isAlive(): boolean {
-    return this.energy >= Settings.bugs.blue.survivalEnergy;
+    return this.energy >= Settings.bugs.red.survivalEnergy;
   }
 
   private get radius(): number {

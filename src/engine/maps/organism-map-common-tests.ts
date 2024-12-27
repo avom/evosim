@@ -10,7 +10,7 @@ export const commentOrganismMapTests = (name: string, createSut: () => OrganismM
   describe(`OrganismMap implementation ${name}`, () => {
     describe("move(organism, fromX, fromY)", () => {
       const sut = createSut();
-      const organism = new BlueBug(world, 10, 10, Settings.bugs.blue.initialEnergy);
+      const organism = new BlueBug(world, 1, 10, 10, Settings.bugs.blue.initialEnergy);
       sut.add(organism);
       organism.x = 20;
       organism.y = 20;
@@ -37,22 +37,22 @@ export const commentOrganismMapTests = (name: string, createSut: () => OrganismM
 
       it("returns all organisms within search radius", () => {
         const sut = createSut();
-        sut.add(new BlueBug(world, 10, 10, Settings.bugs.blue.initialEnergy));
-        sut.add(new BlueBug(world, 11, 11, Settings.bugs.blue.initialEnergy));
+        sut.add(new BlueBug(world, 1, 10, 10, Settings.bugs.blue.initialEnergy));
+        sut.add(new BlueBug(world, 1, 11, 11, Settings.bugs.blue.initialEnergy));
         const result = sut.getAllWithinRadius(10, 10, 3);
         expect(result).toHaveLength(2);
       });
 
       it("does not return organisms outside of search radius", () => {
         const sut = createSut();
-        sut.add(new BlueBug(world, 20, 20, Settings.bugs.blue.initialEnergy));
+        sut.add(new BlueBug(world, 1, 20, 20, Settings.bugs.blue.initialEnergy));
         const result = sut.getAllWithinRadius(10, 10, 10);
         expect(result).toEqual([]);
       });
 
       it("does not return dead bugs", () => {
         const sut = createSut();
-        sut.add(new BlueBug(world, 10, 10, 0));
+        sut.add(new BlueBug(world, 1, 10, 10, 0));
         const result = sut.getAllWithinRadius(10, 10, 10);
         expect(result).toEqual([]);
       });
@@ -61,7 +61,7 @@ export const commentOrganismMapTests = (name: string, createSut: () => OrganismM
     describe("remove()", () => {
       it("removes organism from the map", () => {
         const sut = createSut();
-        const bug = new BlueBug(world, 10, 10, Settings.bugs.blue.initialEnergy);
+        const bug = new BlueBug(world, 1, 10, 10, Settings.bugs.blue.initialEnergy);
         sut.add(bug);
 
         sut.remove(bug);
@@ -75,7 +75,7 @@ export const commentOrganismMapTests = (name: string, createSut: () => OrganismM
       it('returns true if there is a plant with coordinates px, py such that' +
         'floor(x) <= px < floor(x + 1) and floor(y) <= py < floor(y + 1)', () => {
         const sut = createSut();
-        sut.add(new Plant(world, 10.9, 10, Settings.plants.initialEnergy));
+        sut.add(new Plant(world, 1, 10.9, 10, Settings.plants.seedEnergy));
 
         const result = sut.isAlivePlantAtCell(10.9, 10.1);
         expect(result).toBe(true);
@@ -84,9 +84,9 @@ export const commentOrganismMapTests = (name: string, createSut: () => OrganismM
       it('returns false if there are no plants with coordinates px, py such that' +
         'floor(x) <= px < floor(x + 1) and floor(y) <= py < floor(y + 1)', () => {
         const sut = createSut();
-        sut.add(new Plant(world, 10, 9.9, Settings.plants.initialEnergy));
-        sut.add(new Plant(world, 11, 10, Settings.plants.initialEnergy));
-        sut.add(new BlueBug(world, 10, 10, Settings.bugs.blue.initialEnergy));
+        sut.add(new Plant(world, 1, 10, 9.9, Settings.plants.seedEnergy));
+        sut.add(new Plant(world, 1, 11, 10, Settings.plants.seedEnergy));
+        sut.add(new BlueBug(world, 1, 10, 10, Settings.bugs.blue.initialEnergy));
 
         const result = sut.isAlivePlantAtCell(10.9, 10.1);
         expect(result).toBe(false);

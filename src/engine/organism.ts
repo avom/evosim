@@ -1,4 +1,8 @@
 export interface Organism {
+  get id(): number;
+
+  get generation(): number;
+
   get x(): number;
   get y(): number;
   get energy(): number;

@@ -5,12 +5,16 @@ import { World } from "./world";
 export class BlueBug implements Organism {
   private readonly world: World;
 
+  readonly id: number;
+  readonly generation: number;
   x: number;
   y: number;
   energy: number;
 
-  constructor(world: World, x: number, y: number, energy: number) {
+  constructor(world: World, generation: number, x: number, y: number, energy: number) {
     this.world = world;
+    this.id = world.nextOrganismId();
+    this.generation = generation;
     this.x = x;
     this.y = y;
     this.energy = energy;
@@ -42,11 +46,11 @@ export class BlueBug implements Organism {
     this.energy -= cost.metabolism * this.radius ** 2;
     this.energy -= cost.heatLoss * this.radius;
 
-    this.energy += this.world.killRandomPlantInRadiusAndReturnEnergy(this.x, this.y, this.radius);
+    this.energy += this.world.killRandomEdiblePlantInRadiusAndReturnEnergy(this.x, this.y, this.radius);
 
     const offspringEnergy = Settings.bugs.blue.initialEnergy;
     if (this.energy >= 2 * offspringEnergy) {
-      this.world.add(new BlueBug(this.world, this.x, this.y, offspringEnergy));
+      this.world.add(new BlueBug(this.world, this.generation + 1, this.x, this.y, offspringEnergy));
       this.energy -= offspringEnergy;
     }
   }

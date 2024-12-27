@@ -1,19 +1,26 @@
 import { BlueBug } from "./blue-bug";
 import { Organism } from "./organism";
 import { OrganismMap } from "./maps/organism-map";
-import { Plant } from "./plant";
+import { Eatable, Plant } from "./plant";
 import { Settings } from "./settings";
 import { LinearOrganismMap } from "./maps/linear-organism-map";
 import { MatrixOrganismMap } from "./maps/matrix-organism-map";
 import { RedBug } from "./red-bug";
+import { Circle } from "./types";
 
-export class World {
+export interface EdiblePlantFinder {
+  getEdiblePlantsInRadius(area: Circle): Eatable[];
+}
+
+export class World implements EdiblePlantFinder {
   readonly width: number;
   readonly height: number;
 
   private organisms: Organism[] = [];
   private organismCount = 0;
   private readonly map: OrganismMap;
+
+  private lastOrganismId = 0;
 
   constructor(width: number, height: number) {
     this.width = width;
@@ -27,6 +34,7 @@ export class World {
     context.fillRect(0, 0, this.width, this.height);
 
     const drawingOrder = [Plant, BlueBug, RedBug];
+    // const drawingOrder = [BlueBug, Plant, RedBug];
 
     for (const organismType of drawingOrder) {
       for (let i = 0; i < this.organismCount; i++) {
@@ -72,7 +80,10 @@ export class World {
     for (let i = 0; i < plantCount; i++) {
       const x = Math.floor(Math.random() * this.width);
       const y = Math.floor(Math.random() * this.height);
-      const plant = new Plant(this, x, y, Settings.plants.initialEnergy);
+      const energy =
+        Math.random() * (Settings.plants.maxEnergy - Settings.plants.seedEnergy) +
+        Settings.plants.seedEnergy;
+      const plant = new Plant(this, 1, x, y, energy);
       this.organisms.push(plant);
       this.map.add(plant);
     }
@@ -81,7 +92,7 @@ export class World {
     for (let i = 0; i < bluebugCount; i++) {
       const x = Math.floor(Math.random() * this.width);
       const y = Math.floor(Math.random() * this.height);
-      const bug = new BlueBug(this, x, y, Settings.bugs.blue.initialEnergy);
+      const bug = new BlueBug(this, 1, x, y, Settings.bugs.blue.initialEnergy);
       this.organisms.push(bug);
       this.map.add(bug);
     }
@@ -90,7 +101,7 @@ export class World {
     for (let i = 0; i < redbugCount; i++) {
       const x = Math.floor(Math.random() * this.width);
       const y = Math.floor(Math.random() * this.height);
-      const bug = new RedBug(this, x, y, Settings.bugs.red.initialEnergy);
+      const bug = new RedBug(this, 1, x, y, Settings.bugs.red.initialEnergy);
       this.organisms.push(bug);
       this.map.add(bug);
     }
@@ -111,15 +122,21 @@ export class World {
     this.map.add(organism);
   }
 
-  killRandomPlantInRadiusAndReturnEnergy(x: number, y: number, r: number): number {
+  getEdiblePlantsInRadius(area: Circle): Plant[] {
+    const organisms = this.map.getAllWithinRadius(area.center.x, area.center.y, area.r);
+    const plants = organisms.filter((o) => o instanceof Plant) as Plant[];
+    return plants.filter((p) => p.isEdible);
+  }
+
+  killRandomEdiblePlantInRadiusAndReturnEnergy(x: number, y: number, r: number): number {
     const organisms = this.map.getAllWithinRadius(x, y, r);
-    const plants = organisms.filter(o => o.isAlive && o instanceof Plant);
-    if (plants.length == 0) {
+    const ediblePlants = organisms.filter((o) => o.isAlive && o instanceof Plant && o.isEdible);
+    if (ediblePlants.length == 0) {
       return 0;
     }
 
-    const idx = Math.floor(Math.random() * plants.length);
-    const plant = plants[idx];
+    const idx = Math.floor(Math.random() * ediblePlants.length);
+    const plant = ediblePlants[idx];
     const energy = plant.energy;
     plant.kill();
     return energy;
@@ -127,7 +144,7 @@ export class World {
 
   killRandomBlueBugInRadiusAndReturnEnergy(x: number, y: number, r: number) {
     const organisms = this.map.getAllWithinRadius(x, y, r);
-    const blues = organisms.filter(o => o.isAlive && o instanceof BlueBug);
+    const blues = organisms.filter((o) => o.isAlive && o instanceof BlueBug);
     if (blues.length == 0) {
       return 0;
     }
@@ -138,4 +155,36 @@ export class World {
     bug.kill();
     return energy;
   }
+
+  getOrganismCount(type: typeof Plant | typeof BlueBug | typeof RedBug): number {
+    let result = 0;
+    for (let i = 0; i < this.organismCount; i++) {
+      const organism = this.organisms[i];
+      if (organism.isAlive && organism instanceof type) {
+        result++;
+      }
+    }
+    return result;
+  }
+
+  nextOrganismId(): number {
+    return ++this.lastOrganismId;
+  }
+
+  selectBugAt(x: number, y: number): Organism | null {
+    let closest: Organism | null = null;
+    let closestDist: number = 0;
+    const organisms = this.map.getAllWithinRadius(x, y, Settings.ui.bugSelectRange);
+    for (const organism of organisms) {
+      if (organism instanceof BlueBug || organism instanceof RedBug || organism.isAlive) {
+        const d = (organism.x - x) ** 2 + (organism.y - y) ** 2;
+        if (closest == null || closestDist > d) {
+          closest = organism;
+          closestDist = d;
+        }
+      }
+    }
+    return closest;
+  }
+
 }

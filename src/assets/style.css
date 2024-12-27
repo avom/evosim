@@ -67,5 +67,25 @@ button:focus-visible {
 #world {
   width: 80%;
   height: 100%;
+  float: left;
   /* background-color: white; */
+}
+
+#hud {
+  width: 20%;
+  height: 100%;
+  float: right;
+  padding: 8px;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+
+}
+
+.game-info {
+  width: 100%;
+}
+
+.number-cell {
+  text-align: right;
 }
